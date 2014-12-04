@@ -1,19 +1,54 @@
-// Wire Master Writer
-// by Nicholas Zambetti <http://www.zambetti.com>
-
-// Demonstrates use of the Wire library
-// Writes data to an I2C/TWI slave device
-// Refer to the "Wire Slave Receiver" example for use with this
-
-// Created 29 March 2006
-
-// This example code is in the public domain.
-
+// Wire Master Writer for Arm
+// by RationalAsh
+// Created 4 December 2014
 
 #include <Wire.h>
 
+//String to store the incoming data
 String inputString = "";
 boolean stringComplete = false;
+int angles[5];
+
+byte x;
+byte y[3];
+
+byte ctob(char ch)
+{
+  byte ans = byte(ch) - 48;
+  return ans;
+}
+
+byte bstoint(byte one=0, byte ten=0, byte hund=0)
+{
+  byte ans = (one*1 + ten*10 + hund*100);
+  if(ans <= 255)  return ans;
+  else return 0;
+}
+
+byte getAngle(String inputStr)
+{
+  int i = inputStr.length() - 1;
+  
+  if(i==1)
+    { 
+      y[2] = ctob(inputStr[0]);
+    }
+    else if(i==2)
+    {
+      y[2] = ctob(inputStr[1]);
+      y[1] = ctob(inputStr[0]);
+    }
+    else if(i==3)
+    {
+      y[2] = ctob(inputStr[2]);
+      y[1] = ctob(inputStr[1]);
+      y[0] = ctob(inputStr[0]);
+    }
+    
+    byte ans = bstoint(y[2], y[1], y[0]);
+    
+    return ans;
+}
 
 void setup()
 {
@@ -22,40 +57,64 @@ void setup()
   inputString.reserve(30);
 }
 
-byte x = 0;
-
 void loop()
 {
-  //x = Serial.parseInt();
+  //If string received, then transmit data to the slave ICs
   if(stringComplete)
   {
+    y[0] = 0; y[1] = 0; y[2] = 0;
+    int i = inputString.length() - 1;
     Serial.println("GotString!");
-    x = int(inputString[0]);
+    if(i==1)
+    { 
+      y[2] = ctob(inputString[0]);
+    }
+    else if(i==2)
+    {
+      y[2] = ctob(inputString[1]);
+      y[1] = ctob(inputString[0]);
+    }
+    else if(i==3)
+    {
+      y[2] = ctob(inputString[2]);
+      y[1] = ctob(inputString[1]);
+      y[0] = ctob(inputString[0]);
+    }
+      
+    //x = bstoint(y[2], y[1], y[0]);
+    x = getAngle(inputString);
     Serial.print("Sending: ");
     Serial.println(x);
+    Serial.print("Length: ");
+    Serial.println(i);
     
-    Wire.beginTransmission(1);
-    Wire.write(x);
-    Wire.endTransmission();
-    
-    Wire.beginTransmission(2);
-    Wire.write(x);
-    Wire.endTransmission();
-    
+    //Transmit the angles to the ICs
     Wire.beginTransmission(3);
     Wire.write(x);
     Wire.endTransmission();
     
+    Wire.beginTransmission(4);
+    Wire.write(x);
+    Wire.endTransmission();
+    
+    //Wire.beginTransmission(3);
+    //Wire.write(x);
+    //Wire.endTransmission();
+    
+    //Wire.beginTransmission(3);
+    //Wire.write(x);
+    //Wire.endTransmission();
+    
+    //Wire.beginTransmission(3);
+    //Wire.write(x);
+    //Wire.endTransmission();
+    
     inputString = "";
     stringComplete = false;
   }
- 
-  //Wire.beginTransmission(4); // transmit to device #4
-  //Wire.write("x is ");        // sends five bytes
-  //Wire.write(x);              // sends one byte  
-  //Wire.endTransmission();    // stop transmitting
 
-  x++;
+  //introduce delay
+  //x++;
   delay(500);
 }
 
@@ -69,7 +128,6 @@ void serialEvent() {
     // so the main loop can do something about it:
     if (inChar == '\n') {
     stringComplete = true;
-    //Serial.println("GotString!feifeifjiefj");
     } 
   }
 }
