@@ -4,130 +4,63 @@
 
 #include <Wire.h>
 
-//String to store the incoming data
-String inputString = "";
-boolean stringComplete = false;
-int angles[5];
-
-byte x;
-byte y[3];
-
-byte ctob(char ch)
-{
-  byte ans = byte(ch) - 48;
-  return ans;
-}
-
-byte bstoint(byte one=0, byte ten=0, byte hund=0)
-{
-  byte ans = (one*1 + ten*10 + hund*100);
-  if(ans <= 255)  return ans;
-  else return 0;
-}
-
-byte getAngle(String inputStr)
-{
-  int i = inputStr.length() - 1;
-  
-  if(i==1)
-    { 
-      y[2] = ctob(inputStr[0]);
-    }
-    else if(i==2)
-    {
-      y[2] = ctob(inputStr[1]);
-      y[1] = ctob(inputStr[0]);
-    }
-    else if(i==3)
-    {
-      y[2] = ctob(inputStr[2]);
-      y[1] = ctob(inputStr[1]);
-      y[0] = ctob(inputStr[0]);
-    }
-    
-    byte ans = bstoint(y[2], y[1], y[0]);
-    
-    return ans;
-}
+//Array to store the incoming data
+volatile int angles[5];
 
 void setup()
 {
   Wire.begin(); // join i2c bus (address optional for master)
   Serial.begin(9600);
-  inputString.reserve(30);
 }
 
 void loop()
 {
-  //If string received, then transmit data to the slave ICs
-  if(stringComplete)
-  {
-    y[0] = 0; y[1] = 0; y[2] = 0;
-    int i = inputString.length() - 1;
-    Serial.println("GotString!");
-    if(i==1)
-    { 
-      y[2] = ctob(inputString[0]);
-    }
-    else if(i==2)
-    {
-      y[2] = ctob(inputString[1]);
-      y[1] = ctob(inputString[0]);
-    }
-    else if(i==3)
-    {
-      y[2] = ctob(inputString[2]);
-      y[1] = ctob(inputString[1]);
-      y[0] = ctob(inputString[0]);
-    }
-      
-    //x = bstoint(y[2], y[1], y[0]);
-    x = getAngle(inputString);
-    Serial.print("Sending: ");
-    Serial.println(x);
-    Serial.print("Length: ");
-    Serial.println(i);
+     
+  //Transmit the angles to the ICs
+  Wire.beginTransmission(4);
+  Wire.write(byte(angles[1]));
+  Wire.endTransmission();
+  
+  Wire.beginTransmission(3);
+  Wire.write(byte(angles[0]));
+  Wire.endTransmission();
     
-    //Transmit the angles to the ICs
-    Wire.beginTransmission(3);
-    Wire.write(x);
-    Wire.endTransmission();
+  //Wire.beginTransmission(5);
+  //Wire.write(byte(angles[2]));
+  //Wire.endTransmission();
+  
+  Wire.beginTransmission(2);
+  Wire.write(byte(angles[2]));
+  Wire.endTransmission();
+ 
+  //Wire.beginTransmission(1);
+  //Wire.write(byte(angles[4]));
+  //Wire.endTransmission();
     
-    Wire.beginTransmission(4);
-    Wire.write(x);
-    Wire.endTransmission();
     
-    //Wire.beginTransmission(3);
-    //Wire.write(x);
-    //Wire.endTransmission();
-    
-    //Wire.beginTransmission(3);
-    //Wire.write(x);
-    //Wire.endTransmission();
-    
-    //Wire.beginTransmission(3);
-    //Wire.write(x);
-    //Wire.endTransmission();
-    
-    inputString = "";
-    stringComplete = false;
-  }
 
   //introduce delay
-  //x++;
-  delay(500);
+  delay(300);
 }
 
 void serialEvent() {
-  while (Serial.available()) {
-    // get the new byte:
-    char inChar = (char)Serial.read(); 
-    // add it to the inputString:
-    inputString += inChar;
-    // if the incoming character is a newline, set a flag
-    // so the main loop can do something about it:
-    if (inChar == '\n') {
-    stringComplete = true;
-    } 
+  while (Serial.available()>0) 
+  {
+    angles[0] = Serial.parseInt();
+    angles[1] = Serial.parseInt();
+    angles[2] = Serial.parseInt();
+    angles[3] = Serial.parseInt();
+    angles[4] = Serial.parseInt();
   }
+  Serial.println("Got angles!");
+  Serial.print("m1: ");
+  Serial.print(angles[0]);
+  Serial.print(" m2: ");
+  Serial.print(angles[1]);
+  Serial.print(" m3: ");
+  Serial.print(angles[2]);
+  Serial.print(" m4: ");
+  Serial.print(angles[3]);
+  Serial.print(" m5: ");
+  Serial.println(angles[4]);
 }
