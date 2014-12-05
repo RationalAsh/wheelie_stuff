@@ -10,19 +10,23 @@
 #define CONOUT P2_2
 #define MA P2_0
 #define MB P2_1
-
 #define REV -1
 #define FWD 1
 #define STOP 0
-
+#define DEBUG 0
+#define GRAPH 1
+#define FINAL 2
 //Define Variables we'll be connecting to
-double setPoint = 30, input, output;
+double setPoint = 120, input, output;
 //The PID constants
-double Kp=2, Ki=0, Kd=0;
-double angle = 30;
+double Kp=20, Ki=0, Kd=0;
+double angle = 120;
+int x;
+//char y[4] = "222";
 
 //To debug or not to debug
-boolean debugFlag = true;
+//boolean debugFlag = true;
+int MODE = DEBUG;
 boolean serialFlag = false;
 
 PID armcontroller(&input, &output, &setPoint, Kp,Ki,Kd, DIRECT);
@@ -49,7 +53,12 @@ void setDir(int D)
 
 void setup()
 {
+  //Set up pin outputs and inputs.
   pinMode(LED, OUTPUT);
+  pinMode(MA, OUTPUT);
+  pinMode(MB, OUTPUT);
+  pinMode(CONOUT, OUTPUT);
+  
   Wire.begin(1);                // join i2c bus with a given address
   Wire.onReceive(receiveEvent); // register event
   pinMode(POSFB, INPUT);
@@ -58,10 +67,13 @@ void setup()
   armcontroller.SetMode(AUTOMATIC);
   armcontroller.SetOutputLimits(-255, 255);
   Serial.begin(9600);           // start serial for output
+  Serial.setTimeout(200);
+  analogFrequency(1000); //Set PWM frequency to 1KHz
 }
 
 void loop()
 {
+  //x = atoi(y);
   //Read the analog feedback value
   input = map(analogRead(POSFB), 0, 1023, 0,270);
   armcontroller.Compute();
@@ -77,19 +89,33 @@ void loop()
   analogWrite(CONOUT, abs(output));
   
   //Debug outputs
-  if(debugFlag)
+  if(MODE == DEBUG)
   {
-    Serial.print("Target: ");
-    Serial.print(setPoint, 4);
-    Serial.print(" | PVal: ");
-    Serial.print(input, 4);
+    Serial.print("TGT: ");
+    Serial.print(setPoint, 1);
+    Serial.print(" | POT: ");
+    Serial.print(input, 1);
     Serial.print(" | PWM: ");
-    Serial.print(output, 4);
-    Serial.print(" | Err: ");
-    Serial.print(setPoint - input, 4);
-    Serial.print(" | Dir: ");
-    if(output <= 0) Serial.println("REV");
-    else if(output > 0) Serial.println("FWD");
+    Serial.print(output, 1);
+    Serial.print(" | ERR: ");
+    Serial.print(setPoint - input, 1);
+    Serial.print(" | DIR: ");
+    if(output <= 0) Serial.print("REV");
+    else if(output > 0) Serial.print("FWD");
+    Serial.print(" | K: ");
+    Serial.print(Kp);
+    Serial.print(",");
+    Serial.print(Ki);
+    Serial.print(",");
+    Serial.println(Kd);
+  }
+  else if(MODE == GRAPH)
+  {
+    Serial.print(setPoint, 1);
+    Serial.print(",");
+    Serial.print(input, 1);
+    Serial.print(",");
+    Serial.println(output);
   }
   
   if(serialFlag)
@@ -115,10 +141,15 @@ void receiveEvent(int howMany)
 }
 
 //Function that executes whenever Serial Data is received
-void serialEvent() {
+void serialEvent() 
+{
   while (Serial.available()>0) 
   {
     angle = Serial.parseInt();
+    Kp = Serial.parseInt();
+    Ki = Serial.parseInt();
+    Kd = Serial.parseInt();
+    x = Serial.parseInt();
   }
   int ldstat = int(angle)%2;
   digitalWrite(LED, ldstat);
