@@ -5,7 +5,8 @@
 #include <Wire.h>
 
 //Array to store the incoming data
-volatile int angles[5];
+volatile int angles[5] = {0, 0, 0, 0, 0};
+boolean serialFlag = false;
 
 void setup()
 {
@@ -15,43 +16,29 @@ void setup()
 
 void loop()
 {
-     
+  if(serialFlag)
+  {  
   //Transmit the angles to the ICs
   Wire.beginTransmission(4);
-  Wire.write(byte(angles[1]));
+  Wire.write(byte(angles[0]));
   Wire.endTransmission();
   
   Wire.beginTransmission(3);
-  Wire.write(byte(angles[0]));
+  Wire.write(byte(angles[1]));
   Wire.endTransmission();
     
-  //Wire.beginTransmission(5);
-  //Wire.write(byte(angles[2]));
-  //Wire.endTransmission();
+  Wire.beginTransmission(5);
+  Wire.write(byte(angles[3]));
+  Wire.endTransmission();
   
   Wire.beginTransmission(2);
   Wire.write(byte(angles[2]));
   Wire.endTransmission();
  
-  //Wire.beginTransmission(1);
-  //Wire.write(byte(angles[4]));
-  //Wire.endTransmission();
-    
-    
-
-  //introduce delay
-  delay(300);
-}
-
-void serialEvent() {
-  while (Serial.available()>0) 
-  {
-    angles[0] = Serial.parseInt();
-    angles[1] = Serial.parseInt();
-    angles[2] = Serial.parseInt();
-    angles[3] = Serial.parseInt();
-    angles[4] = Serial.parseInt();
-  }
+  Wire.beginTransmission(1);
+  Wire.write(byte(angles[4]));
+  Wire.endTransmission();
+  
   Serial.println("Got angles!");
   Serial.print("m1: ");
   Serial.print(angles[0]);
@@ -63,4 +50,22 @@ void serialEvent() {
   Serial.print(angles[3]);
   Serial.print(" m5: ");
   Serial.println(angles[4]);
+
+  serialFlag = false;  
+  }  
+
+  //introduce delay
+  delay(10);
+}
+
+void serialEvent() {
+  while (Serial.available()>0) 
+  {
+    angles[0] = Serial.parseInt();
+    angles[1] = Serial.parseInt();
+    angles[2] = Serial.parseInt();
+    angles[3] = Serial.parseInt();
+    angles[4] = Serial.parseInt();
+  }
+  serialFlag = true;
 }
