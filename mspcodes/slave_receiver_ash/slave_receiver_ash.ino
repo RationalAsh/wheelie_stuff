@@ -79,14 +79,17 @@ void loop()
   //Debug outputs
   if(debugFlag)
   {
-    Serial.print("Setpoint: ");
+    Serial.print("Target: ");
     Serial.print(setPoint, 4);
-    Serial.print(" | PotVal: ");
+    Serial.print(" | PVal: ");
     Serial.print(input, 4);
-    Serial.print(" | Control PWM: ");
+    Serial.print(" | PWM: ");
     Serial.print(output, 4);
-    Serial.print(" | Error: ");
-    Serial.println(setPoint - input, 4);
+    Serial.print(" | Err: ");
+    Serial.print(setPoint - input, 4);
+    Serial.print(" | Dir: ");
+    if(output <= 0) Serial.println("REV");
+    else if(output > 0) Serial.println("FWD");
   }
   
   if(serialFlag)
