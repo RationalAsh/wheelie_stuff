@@ -16,12 +16,18 @@
 #define DEBUG 0
 #define GRAPH 1
 #define FINAL 2
+#define ANGLE_LOWER_LIMIT 75
+#define ANGLE_UPPER_LIMIT 270
+
 //Define Variables we'll be connecting to
 double setPoint = 120, input, output;
 //The PID constants
 double Kp=20, Ki=0, Kd=0;
+
+
 double angle = 120;
 int x;
+double error;
 //char y[4] = "222";
 
 //To debug or not to debug
@@ -46,8 +52,8 @@ void setDir(int D)
   }
   else if(D==STOP)
   {
-    digitalWrite(MA, HIGH);
-    digitalWrite(MB, HIGH);
+    digitalWrite(MA, LOW);
+    digitalWrite(MB, LOW);
   }
 }
 
@@ -75,7 +81,8 @@ void loop()
 {
   //x = atoi(y);
   //Read the analog feedback value
-  input = map(analogRead(POSFB), 0, 1023, 0,270);
+  //input = map(analogRead(POSFB), 0, 1023, 0,270);
+  input = (analogRead(POSFB)/1023.0)*270.0;
   armcontroller.Compute();
   
   if(output <= 0)
@@ -86,7 +93,19 @@ void loop()
   {
     setDir(REV);
   }
-  analogWrite(CONOUT, abs(output));
+  
+  error = abs(setPoint - input);
+  
+  if(error > 2)
+  {
+    analogWrite(CONOUT, abs(output));
+  }
+  else 
+  {
+    setDir(STOP);
+    //analogWrite(CONOUT, 0);
+  }
+    
   
   //Debug outputs
   if(MODE == DEBUG)
@@ -123,11 +142,12 @@ void loop()
     Serial.print("Got angle: ");
     Serial.println(angle, 4);
     setPoint = angle;
-    if(setPoint > 180) setPoint = 180;
+    if(setPoint > ANGLE_UPPER_LIMIT) setPoint = ANGLE_UPPER_LIMIT;
+    if(setPoint < ANGLE_LOWER_LIMIT) setPoint = ANGLE_LOWER_LIMIT;
     serialFlag = false;
   }
   
-  delay(50);
+  delay(10);
 }
 
 // function that executes whenever data is received from master
@@ -137,6 +157,9 @@ void receiveEvent(int howMany)
   int x = Wire.read();    // receive byte as an integer
   //Serial.println(x);         // print the integer
   int ldstat = x%2;
+  setPoint = double(x);
+  if(setPoint > ANGLE_UPPER_LIMIT) setPoint = ANGLE_UPPER_LIMIT;
+  if(setPoint < ANGLE_LOWER_LIMIT) setPoint = ANGLE_LOWER_LIMIT;
   digitalWrite(LED, ldstat);
 }
 
@@ -145,11 +168,12 @@ void serialEvent()
 {
   while (Serial.available()>0) 
   {
-    angle = Serial.parseInt();
-    Kp = Serial.parseInt();
-    Ki = Serial.parseInt();
-    Kd = Serial.parseInt();
-    x = Serial.parseInt();
+    angle = Serial.parseFloat();
+    Kp = Serial.parseFloat();
+    Ki = Serial.parseFloat();
+    Kd = Serial.parseFloat();
+    armcontroller.SetTunings(Kp, Ki, Kd);
+    x = Serial.parseFloat();
   }
   int ldstat = int(angle)%2;
   digitalWrite(LED, ldstat);
