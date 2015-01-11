@@ -19,23 +19,23 @@ void loop()
   if(serialFlag)
   {  
   //Transmit the angles to the ICs
-  Wire.beginTransmission(4);
+  Wire.beginTransmission(1);
   Wire.write(byte(angles[0]));
   Wire.endTransmission();
   
-  Wire.beginTransmission(3);
+  Wire.beginTransmission(2);
   Wire.write(byte(angles[1]));
   Wire.endTransmission();
     
-  Wire.beginTransmission(5);
-  Wire.write(byte(angles[3]));
-  Wire.endTransmission();
-  
-  Wire.beginTransmission(2);
+  Wire.beginTransmission(3);
   Wire.write(byte(angles[2]));
   Wire.endTransmission();
+  
+  Wire.beginTransmission(4);
+  Wire.write(byte(angles[3]));
+  Wire.endTransmission();
  
-  Wire.beginTransmission(1);
+  Wire.beginTransmission(5);
   Wire.write(byte(angles[4]));
   Wire.endTransmission();
   

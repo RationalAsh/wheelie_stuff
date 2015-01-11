@@ -1,6 +1,20 @@
 // Wire Slave Receiver for Arm
 // by RationalAsh
 // Created 4 December 2014
+/*
+  Motor tuning details
+  Base (M0):
+  Kp = 30; Ki = 0.08; Kd = 0.1
+  Angle Limits: 110 - 270
+  Link 1 (M1):
+  
+  Link 2 (M2):
+  
+  Link 3 (M3):
+  
+  Link 4 (M4):
+
+*/
 
 #include <Wire.h>
 #include <PID_v1.h>
@@ -16,13 +30,14 @@
 #define DEBUG 0
 #define GRAPH 1
 #define FINAL 2
-#define ANGLE_LOWER_LIMIT 75
+#define ANGLE_LOWER_LIMIT 110
 #define ANGLE_UPPER_LIMIT 270
+#define MAX_DRIVE 235
 
 //Define Variables we'll be connecting to
-double setPoint = 120, input, output;
+double setPoint = 180, input, output;
 //The PID constants
-double Kp=20, Ki=0, Kd=0;
+double Kp=30, Ki=0.08, Kd=0.1;
 
 
 double angle = 120;
@@ -71,7 +86,7 @@ void setup()
   input = analogRead(POSFB);
   //Turn on PID
   armcontroller.SetMode(AUTOMATIC);
-  armcontroller.SetOutputLimits(-255, 255);
+  armcontroller.SetOutputLimits(-MAX_DRIVE, MAX_DRIVE);
   Serial.begin(9600);           // start serial for output
   Serial.setTimeout(200);
   analogFrequency(1000); //Set PWM frequency to 1KHz
