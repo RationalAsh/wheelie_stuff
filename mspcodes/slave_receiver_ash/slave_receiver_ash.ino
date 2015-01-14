@@ -33,6 +33,7 @@
 #define ANGLE_LOWER_LIMIT 110
 #define ANGLE_UPPER_LIMIT 270
 #define MAX_DRIVE 235
+#define I2C_ADDRESS 1
 
 //Define Variables we'll be connecting to
 double setPoint = 180, input, output;
@@ -80,7 +81,7 @@ void setup()
   pinMode(MB, OUTPUT);
   pinMode(CONOUT, OUTPUT);
   
-  Wire.begin(1);                // join i2c bus with a given address
+  Wire.begin(I2C_ADDRESS);                // join i2c bus with a given address
   Wire.onReceive(receiveEvent); // register event
   pinMode(POSFB, INPUT);
   input = analogRead(POSFB);
