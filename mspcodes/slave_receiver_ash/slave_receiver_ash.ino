@@ -2,10 +2,15 @@
 // by RationalAsh
 // Created 4 December 2014
 /*
+  LED Error panel for robotic arms
+  Power supply panel
+  Undervoltage protection PCB 
+  
+  
   Motor tuning details
   Base (M0):
   Kp = 30; Ki = 0.08; Kd = 0.1
-  Angle Limits: 110 - 270
+  Angle Limits: 0 - 180
   Link 1 (M1):
   
   Link 2 (M2):
@@ -20,6 +25,7 @@
 #include <PID_v1.h>
 
 #define LED RED_LED
+#define ERROR_LED 12
 #define POSFB A4
 #define CONOUT P2_2
 #define MA P2_0
@@ -30,15 +36,15 @@
 #define DEBUG 0
 #define GRAPH 1
 #define FINAL 2
-#define ANGLE_LOWER_LIMIT 110
+#define ANGLE_LOWER_LIMIT 0
 #define ANGLE_UPPER_LIMIT 270
 #define MAX_DRIVE 235
-#define I2C_ADDRESS 1
+#define I2C_ADDRESS 2
 
 //Define Variables we'll be connecting to
 double setPoint = 180, input, output;
 //The PID constants
-double Kp=30, Ki=0.08, Kd=0.1;
+double Kp=2.6, Ki=3.1, Kd=0.5;
 
 
 double angle = 120;
@@ -115,10 +121,12 @@ void loop()
   if(error > 2)
   {
     analogWrite(CONOUT, abs(output));
+    analogWrite(ERROR_LED, error);
   }
   else 
   {
     setDir(STOP);
+    analogWrite(ERROR_LED, 0);
     //analogWrite(CONOUT, 0);
   }
     
